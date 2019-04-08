@@ -16,7 +16,7 @@ print("Layer 2:\n\t Filter size 5\n\t 36 filters\n")
 layer2_filterSize = 5
 layer2_numFilters = 36
 print("Number of neurons in fully connected layer: 128")
-fc_size = 128
+fcSize = 128
 
 ## Getting the mnist dataset
 print("Beginning Retrieval of MNIST Dataset...\n")
@@ -106,12 +106,43 @@ xImage = tf.reshape(x, [-1, imgSize, imgSize, numChannels])
 yTrue = tf.placeholder(tf.float32, shape = [None, 10], name ='yTrue')
 yTrueCls = tf.argmax(yTrue, dimension = 1)
 
+
+## Creating CNN Layers
 layerConv1, weightsConv1 = newConvLayer(input = xImage, numInputChannels = numChannels,filterSize = layer1_filterSize, numFilters = layer1_numFilters, usePooling = True)
 
 layerConv2, weightsConv2 = newConvLayer(input = layerConv1, numInputChannels = layer1_numFilters,filterSize = layer2_filterSize, numFilters = layer2_numFilters, usePooling = True)
 
 layerFlat, numFeatures = flattenLayer(layerConv2)
 
-print(numFeatures)
+layerFC1 = newFCLayer(input = layerFlat, numInputs = numFeatures, numOutputs = fcSize, useRelu = True )
+
+layerFC2 = newFCLayer(input = layerFC1, numInputs = fcSize, numOutputs = numClasses, useRelu = False)
+
+print(layerFC2)
+
+##predictions
+
+yPred = tf.nn.softmax(layerFC2)
+yPredCls = tf.argmax(yPred, dimension = 1)
+
+crossEntropy = tf.nn.softmax_cross_entropy_with_logits(logits = layerFC2, labels = yTrue)
+
+cost = tf.reduce_mean(crossEntropy)
+
+optimizer = tf.train.AdamOptimizer(learning_rate = 1e-4).minimize(cost)
+
+correctPred = tf.equal(yPredCls, yTrueCls)
+
+accuracy = tf.reduce_mean(tf.cast(correctPred, tf.float32))
+
+
+## start a tensor flow session
+session = tf.Session()
+
+session.run(tf.initialize_all_variables())
+
+
+
+
 
 
