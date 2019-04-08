@@ -30,7 +30,7 @@ print("Setting data dimensions...\n")
 imgSize = 28
 imgSizeFlat = imgSize * imgSize
 imgShape = (imgSize, imgSize)
-num_channels = 1
+numChannels = 1
 
 ## 10 classification labels
 numClasses = 10
@@ -62,7 +62,7 @@ def newWeights(shape):
     return tf.Variable(tf.truncated_normal(shape, stddev = 0.05))
 
 def newBiases(length):
-    return tf.Variable(tf.constants(0.05, shape=[length]))
+    return tf.Variable(tf.constant(0.05, shape=[length]))
 
 def newConvLayer(input, numInputChannels, filterSize, numFilters, usePooling = True):
     shape = [filterSize, filterSize, numInputChannels, numFilters]
@@ -78,12 +78,13 @@ def newConvLayer(input, numInputChannels, filterSize, numFilters, usePooling = T
     layer = tf.nn.relu(layer)
     return layer, weights
 
-def flattenLayer(layer)
+def flattenLayer(layer):
     layerShape = layer.get_shape()
     numFeatures = np.array(layerShape[1:4], dtype = int).prod()
     layerFlat = tf.reshape(layer, [-1, numFeatures])
+    return layerFlat, numFeatures
 
-def newFCLayer(input, numInputs, numOutputs, useRelu = true):
+def newFCLayer(input, numInputs, numOutputs, useRelu = True):
     weights = newWeights(shape=[numInputs, numOutputs])
     biases = newBiases(length = numOutputs)
     layer = tf.matmul(input, weights) + biases
@@ -92,3 +93,25 @@ def newFCLayer(input, numInputs, numOutputs, useRelu = true):
         layer = tf.nn.relu(layer)
 
     return layer
+
+
+##placeholder
+
+x = tf.placeholder(tf.float32, shape = [None, imgSizeFlat], name = 'x')
+
+##placeholder as image
+
+xImage = tf.reshape(x, [-1, imgSize, imgSize, numChannels])
+
+yTrue = tf.placeholder(tf.float32, shape = [None, 10], name ='yTrue')
+yTrueCls = tf.argmax(yTrue, dimension = 1)
+
+layerConv1, weightsConv1 = newConvLayer(input = xImage, numInputChannels = numChannels,filterSize = layer1_filterSize, numFilters = layer1_numFilters, usePooling = True)
+
+layerConv2, weightsConv2 = newConvLayer(input = layerConv1, numInputChannels = layer1_numFilters,filterSize = layer2_filterSize, numFilters = layer2_numFilters, usePooling = True)
+
+layerFlat, numFeatures = flattenLayer(layerConv2)
+
+print(numFeatures)
+
+
